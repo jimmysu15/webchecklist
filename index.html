@@ -1,0 +1,713 @@
+﻿<!DOCTYPE html>
+<html>
+<head runat="server">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="robots" content="noindex">
+<meta http-equiv="cache-control" content="no-cache">
+    <title>網站完成檢查清單</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>    
+      body{
+        overflow:scroll;
+        overflow-x: hidden;
+        color:#000;font-size:18px;color: #435757;
+        background: linear-gradient(-20deg, #CED082 20%, #a0cecf 80%);
+        background-repeat:no-repeat;
+        background-attachment: fixed;
+        font-family: 'Microsoft Jhenghei', Tahoma, sans-serif;
+        padding-top: 10px;        
+      }
+      .tooltip-inner{white-space: nowrap;width:auto;max-width:100%;}
+      #nav{background:none;border:0;margin-bottom:-5px;}
+      /*.navbar>.container .navbar-brand{margin: -10px 10px 10px -15px;position:fixed;}*/
+      .navbar-brand{padding:15px 15px;position:relative;}
+      .navbar-brand:after {
+          content: '';
+          position: absolute;
+          height: 0px;
+          width: 40px;
+          top: 0;
+          right: -30px;
+          border-bottom: 50px solid #fff;
+          border-right: 30px solid transparent;
+          z-index: -10;
+      }
+      .msg{position:fixed;top:0;width:100%;z-index:99999;text-align:center;letter-spacing:1px;}
+      .msg .alert{background-color:rgba(0,0,0,.8);color:#fff;}
+      .navbar-nav>li>a{padding-top: 10px;padding-bottom: 10px;}
+      .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover{
+        background:rgba(255,255,255,.8);
+        border-radius: 5px 5px 0 0;
+        border-top:2px solid #fff;
+      }      
+      .navbar-default .navbar-brand:focus, .navbar-default .navbar-brand:hover, .navbar-brand{
+        background-color:#fff;
+      }
+      #nav .navbar-collapse {margin-left: 220px;}
+      #navbar-collapse-1 li{margin:5px 0;}
+      #navbar-collapse-1 .navbar-right li{margin:0 5px;}
+      #navbar-collapse-1 .navbar-right a{color:#fff;padding-top:0;padding-bottom:0;}
+      #main {
+        margin: 0 auto 20px;        
+        background-color: rgba(255, 255, 255, .5);
+        box-shadow: 0 0 20px rgba(0, 0, 0, .1);
+      }      
+      .page-header{
+        margin: 0px -15px 10px;
+        background-color: rgba(255,255,255,.5);
+        padding: 10px 20px 10px;
+        border-bottom:1px solid #999;
+      }
+      .page-header small{margin-left: 15px;}
+      .tab-pane li{margin:5px 0;border-bottom: 1px dashed #fff;padding-bottom:5px;}
+      .tab-pane li:hover{background-color: rgba(255, 255, 255, .2);}
+      .optional{color:#999;}
+      input[type=checkbox] {
+       /* margin: 0 0 -53px -9999px;
+        outline: none;*/
+        display:none;
+      }
+      label {
+        display: inline-block;
+        position: relative;
+        padding: 15px 15px;        
+        cursor: pointer;animation: undone .5s;
+        width:30px;
+        color: #29C38F;
+        margin-bottom:0;
+        vertical-align: top;
+        margin-top: -10px;
+      }
+      label:nth-child(2)::before{color:#0F74C0;}
+      label::before {content: '\f10c';display: block;position: absolute;top: 11px;left:0;font: 1.5em 'FontAwesome';}
+      label:hover, input:focus + label {/*background-color: rgba(255, 255, 255, .2);*/}
+      .checked {animation: done 1s;/*text-decoration: line-through;*/}
+      .checked::before {content: '\f058';}
+      label{font-weight:normal;cursor:pointer;}
+      label:hover{/*background:#FEFF85;color:#000;*/opacity:.8;}
+      .checked:hover{background:none;} 
+      date{display:inline;margin-left:20px;color:#999;}
+      .date{background:none;border:0;}     
+
+      @keyframes done {
+        0% {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        50% {
+          opacity: 1;          
+        }
+      }
+
+      @keyframes undone {
+        0% {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        50% {
+          opacity: 1;          
+        }
+      }
+      /*.tab-content>.tab-pane {
+              display:block;
+          }*/
+      
+      #footer{padding-top:30px;}
+      .modal-body label{width:auto;color:#000;}
+      .modal-body label::before{color:#000;}
+      .modal-body .checkbox-inline{padding-left: 25px;margin-left:0;margin-top: 0;}
+      .goback{cursor:pointer;margin-bottom:10px;line-height: 200%;margin-left: 15px;}
+      @media print {
+          .tab-pane button{display:none;}
+          a[href]:after {content: none !important;}
+          .tab-pane li{font-size:10pt;padding-bottom:0;}
+          label{animation: none;}
+          date{margin-left:10px;}
+          .page-header{font-size:12pt;}
+          .goback{display:none;}
+      }
+    </style>
+</head>
+<body>
+<form id="form1" runat="server">
+<nav class="navbar navbar-default navbar-static-top" id="nav">
+  <div class="container">    
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span>  網站完成檢查清單</a>
+    </div>
+    
+    <div class="collapse navbar-collapse" id="navbar-collapse-1">
+      <ul class="nav navbar-nav" id="functab">
+            <li class="active"><a href="#basic" data-toggle="tab">基本檢測</a></li>
+            <li><a href="#admin" data-toggle="tab">後台基本檢測</a></li>
+            <li><a href="#shop" data-toggle="tab">購物網站</a></li>
+            <li><a href="#china" data-toggle="tab">中國網站</a></li> 
+            <li><a href="#online" data-toggle="tab">網站上線後檢測</a></li> 
+      </ul>      
+      <ul class="nav navbar-nav navbar-right">
+        <li><button class="btn btn-primary" onClick='return false;' id="showprintmd"><span class="glyphicon glyphicon-print"></span> 列印</button></li>
+        <li><button type="button" class="btn btn-success" id="save" data-tag="email" disabled><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> 儲存變更</button></li>        
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container -->
+</nav>
+
+                  <div class="msg" style="display:none">
+                        <div class="alert alert-success" role="alert">@Message</div>
+                  </div>
+<!--startprint-->
+        <div class="container" id="main">            
+            <div class="row">                
+                <div class="col-md-12">                  
+                  <div class="tab-content">
+                      <div class="tab-pane active" id="basic">
+                        <h2 class="page-header">基本檢測<small>檢測是否有按鈕無法點擊等狀況</small></h2>
+                                  <ol>
+                                    <li><label><input type='checkbox' name='a1' /></label> 
+                                      <label><input type='checkbox' name='a1a' /></label>
+                                      在 1024*768 / 1280*1024 解析度顯示正常。
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="螢幕比例 4:3"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A1date' value=""></date>
+                                    </li>
+
+                                    <li><label><input type='checkbox' name='a1' /></label>
+                                      <label><input type='checkbox' name='a1a' /></label>
+                                      在 1200*650 解析度顯示正常。
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="視窗沒放到最大的電腦、底下有 dock 工具列的 mac 筆電、瀏覽器裝很多工具列的電腦"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 1366*768 解析度顯示正常。
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="17 / 19 吋寬螢幕解析度(約 16:9 )"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 1440*900 / 1680* 1050 解析度顯示正常。
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="比例 16:10 的寬螢幕"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 1920*1080 解析度顯示正常
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="22 / 24吋電腦螢幕主流解析度"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Google Chrome 最新版本上顯示正常。
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Firefox 最新版本上顯示正常。
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Win8 Modern IE 11 / Win 10 Edge上顯示正常。
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+                                      
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Win7 IE11 / Win8 桌面版 IE11上顯示正常。
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 IE8 (Windows XP)上顯示正常。
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Apple Safari for Mac 上顯示正常。                                    
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Apple Safari for iOS 直/橫畫面顯示正常。                                      
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Chrome for Android 直/橫畫面顯示正常。                                      
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a1' /></label>
+                                        <label><input type='checkbox' name='a1a' /></label>
+                                      在 Android 4.x 的內建瀏覽器中，直/橫畫面顯示正常。                                      
+                                      <date><input type="text" class='date' name='A1date' value=""></date></li>                                      
+                                  </ol>
+
+
+                                  <h2 class="page-header">網站內容檢測</h2>
+                                  <ol>
+                                    <li><label><input type='checkbox' name='a2' /></label>
+                                      <label><input type='checkbox' name='a2a' /></label>
+                                     已設定基本的 favicon  
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                       已使用 <a href="https://developers.google.com/speed/pagespeed/insights/" target="_blank">PageSpeed Insights</a> 檢測是否有重大問題。
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                     網站聯絡表單寄件正常，並已正確設定 Reply-To。
+                                      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="避免店家按回覆信件，回信寄給寄件伺服器，而不是寄給消費者。"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                     移除 js 與 ajax 程式內的 console.log()，避免 IE 舊瀏覽器發生 JS 錯誤。
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+                                      
+                                      <li class="optional"><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                     已設定Flash替代顯示內容。(網站內有 Flash 時適用此項。)
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+                                      
+                                      <li class="optional"><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                     已檢查網站內的 QR code 能否掃描。(網站內有放置 Line, 網址, 聯絡人相關 QR code 時適用此項。)
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+
+                                      <li class="optional"><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a' /></label>
+                                     已檢查網站內的線上聯絡資訊( Wechat, QQ, skype, FB...)連結是否正確。(網站內有放置前述聯絡方式時適用此項。)
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+
+                                      <li class="optional"><label><input type='checkbox' name='a2' /></label>
+                                        <label><input type='checkbox' name='a2a'  /></label>
+                                     不使用&nbsp;embed 語法嵌入影音，以免行動裝置無法顯示。(網站內有嵌入 Youtube 與土豆網…等平台時適用此項。)
+                                      <date><input type="text" class='date' name='A2date' value=""></date></li>
+                                      
+                                  </ol>
+
+                                  <h2 class="page-header">網站分析與提交登錄</h2>
+                                  <ol>
+                                    <li><label><input type='checkbox' name='a3'  /></label>
+                                      <label><input type='checkbox' name='a3a' /></label>
+                                    網站已放置 Google 分析，並將自己與 *** 設為最高權限管理員。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+                                      
+                                      <li><label><input type='checkbox' name='a3' /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                        已完成 <a href="https://www.google.com/webmasters/tools/home" target="_blank">Google Search Console </a> 認證，並與<a href="https://www.google.com/analytics/web/?authuser=1#management/Settings/"  target="_blank"> Google 分析資源</a>連結。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                        已向 Google <a href="https://www.google.com/webmasters/tools/submit-url?hl=zh-TW" target="_blank">提交</a>網站。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                        已向 Bing <a href="http://www.bing.com/toolbox/submit-site-url" target="_blank">提交</a>網站。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                        已完成 <a href="http://www.bing.com/toolbox/webmaster" target="_blank"> Bing 站長工具</a>認證，並提交 sitemap.xml。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                        已在 <a href="https://www.google.com/webmasters/tools/home" target="_blank">Google Search Console</a> 提交 sitemap.xml。
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+
+                                        檢查頁面分享至 Facebook 時顯示的標題、圖片、摘要資訊是否適當。(<a href="https://developers.facebook.com/tools/debug/" target="_blank">Debugger tool</a>)
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+
+                                      <li class="optional"><label><input type='checkbox' name='a3'  /></label>
+                                        <label><input type='checkbox' name='a3a'  /></label>
+                                    已設定FB應用程式封面照片 (FB登入功能的網站適用。)
+                                      <date><input type="text" class='date' name='A3date' value=""></date></li>
+                                      
+                                 </ol>
+                               </div> 
+                               <!-- basic tab end -->
+
+                  <div class="tab-pane" id="admin">
+                                  <h2 class="page-header">後台基本檢測</h2>
+                                  <ol>
+                                    <li><label><input type='checkbox' name='a4' /></label>
+                                      <label><input type='checkbox' name='a4a'  /></label>
+                                    主機已正確設定資料夾權限 (CKfinder圖片上傳、Excel批次匯入匯出功能適用。)
+                                      <date><input type="text" class='date' name='A4date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    已正確設定 CKfinder 的縮圖尺寸。
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+
+                                      <li><label><input type='checkbox' name='a4'  /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    已將 CKfinder 更新到 2.4.2 以上版本。
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="否則在 IE11 / Edge 會無法上傳檔案" aria-hidden="true"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    已將 CKEditor 更新到 4.4.7 以上版本。
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="否則在 IE11 / Edge 無法點選編輯器" aria-hidden="true"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+                                      
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    已正確設定寄件伺服器，並可正常收發信件。
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+                                      
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    調整後台登出逾時時間。
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    在後台放置無登入密碼的操作手冊連結。
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+
+                                      <li><label><input type='checkbox' name='a4' /></label>
+                                        <label><input type='checkbox' name='a4a'  /></label>
+                                    欄位輸入,.'"#$%&*()_|}{?<>、超長字元、こちら葛飾区亀有公園前派出所Viện Ngôn ngữ học, Viện Khoa học xã hội Việt NamÀ à â Ç ç È è É é ê ë Œ œ î ï ô ù û ü « » ² ³ €，資料皆可正常儲存與讀取。
+                                      <date><input type="text" class='date' name='A4date' ></date></li>
+
+                                    </ol> 
+                      </div> 
+                               <!-- admin tab end -->
+                     
+
+                  <div class="tab-pane" id="shop">
+
+                    <h2 class="page-header">購物網站前台頁面</h2>
+                      <ol>
+                        <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a'/></label>
+                            首頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a'/></label>
+                            產品分類列表
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            產品搜尋結果頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            產品內頁
+                            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="分別上傳 3000px*100px、10px*3000px 的圖"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            會員登入頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            會員註冊頁、已更新會員註冊條款。
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            忘記密碼頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+
+                            <li><label><input type='checkbox' name='a5'  /></label><label><input type='checkbox' name='a5a' /></label>
+                            收到重設密碼信之後，連回來網站重設密碼的那一頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            新聞列表頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            新聞內頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            會員中心頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            會員中心_訂單列表頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a'/></label>
+                            會員中心_訂單明細頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            會員中心_編輯會員資料頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            聯絡表單頁
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            一般編輯資料頁面 
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            購物車_未結帳商品清單
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            購物車_收件資訊
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                              
+                            <li><label><input type='checkbox' name='a5' /></label><label><input type='checkbox' name='a5a' /></label>
+                            購物完成畫面
+                              <date><input type="text" class='date' name='A5date' value=""></date></li>
+                            </ol>
+
+
+                              <h2 class="page-header">購物網站後台</h2> 
+
+
+                           <ol>   
+                            <li><label><input type='checkbox' name='a6' /></label></label><label><input type='checkbox' name='a6a'  /></label>
+                            已設定訂單收件人，管理員與消費者可正常收信。
+                              <date><input type="text" class='date' name='A6date'></date></li>
+                              
+                            <li><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            已設定聯絡表單收件人，管理員可正常收信。
+                              <date><input type="text" class='date' name='A6date'></date></li>                                        
+
+                            <li><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            註冊歡迎信內容已更新，信件主旨顯示正常，沒有切字或亂碼等狀況。
+                              <date><input type="text" class='date' name='A6date'></date></li>                                        
+                              
+                            <li><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            購物通知信內容已更新，信件主旨顯示正常，沒有切字或亂碼等狀況。
+                              <date><input type="text" class='date' name='A6date'></date></li>                                        
+                              
+                            <li><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            已調整訂單列印格式。
+                              <date><input type="text" class='date' name='A6date'></date></li>                                        
+                              
+                            <li><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            已調整訂單匯出格式。
+                              <date><input type="text" class='date' name='A6date'></date></li>                                        
+                              
+                            <li class="optional"><label><input type='checkbox' name='a6' /></label><label><input type='checkbox' name='a6a'  /></label>
+                            記錄金物流服務到期時間。<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="避免到期未續約，導致網站的刷卡、超商取貨...功能無法使用。" aria-hidden="true"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                              <date><input type="text" class='date' name='A6date'></date></li>                                     
+
+                          </ol>
+                  </div> 
+                               <!-- shop tab end -->                                           
+          
+
+                  <div class="tab-pane" id="china">
+                         <h2 class="page-header">目標客群以中國為主的網站</h2>
+                         <ol>
+                                    <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    在 360 瀏覽器上顯示正常。
+                                    <date><input type="text" class='date' name='A7date'></date></li>
+
+                                    <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                        避免使用 Google CDN 檔案<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="如 http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button> 與 <span data-toggle="tooltip" data-placement="top" title="">Google 相關服務<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="可用 Google 分析，但 Gmail smtp, re-captcha 與 no-captcha 在中國大陸無法使用"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>                                    
+                                      。
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站<a href="http://zhanzhang.baidu.com/linksubmit/url" target="_blank">提交百度</a>
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站<a href="http://help.sogou.com/addurl.html" target="_blank">提交搜狗</a>
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站<a href="http://info.haosou.com/site_submit.html" target="_blank">提交好搜</a>
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站加入<a href="http://zhanzhang.haosou.com/" target="_blank">快搜站長平台</a>，並提交 sitemap。
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站加入<a href="http://zhanzhang.baidu.com/" target="_blank">百度站長工具</a>，並提交 sitemap。
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    已將網站加入<a href="http://zhanzhang.sogou.com/" target="_blank">搜狗站長平台</a>，並提交 sitemap。 
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                     <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    網站已通過 <a href="http://ce.baidu.com/site/list" target="_blank">百度雲觀測</a> 安全風險檢測，檢測後移除驗證。
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="top" title="可檢測網站是否有 SQL injection 或資料夾洩漏問題"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    電話號碼調整為 +886 格式
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a7' /></label><label><input type='checkbox' name='a7a' /></label>
+                                    Google+、FB、噗浪、Twitter 分享功能改為其他中國大陸地區的<a href="http://www.jiathis.com/" target="_blank">社群分享工具</a>。
+                                      <date><input type="text" class='date' name='A7date'></date></li>
+                       </ol> 
+                 </div><!-- china tab end -->  
+
+
+                  <div class="tab-pane" id="online">
+                                  <h2 class="page-header">網站上線後檢測</h2>
+                                  <ol>
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                    調整 web.config 的CustomError設定，避免直接顯示主機錯誤畫面。
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                     已檢查是否有失效連結(<a href="http://validator.w3.org/checklink">檢測工具</a>) 。  
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                     已移除 index.html 建構中畫面。
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                       已檢查 robots.txt 設定檔是否設定正確。  
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                     域名加 www 跟不加 www 都可以連線。
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                     已將網站相關帳號密碼，如操作後台、簡訊王、Google 帳號、Benchmark 電子報、影音平台...各種帳號記錄存查。
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                      <li class="optional"><label><input type='checkbox' name='a8' /></label><label><input type='checkbox' name='a8a' /></label>
+                                     舊網頁已設定轉址，或是提交搜尋引擎移除。(客戶網站改版時適用此項。)
+                                      <date><input type="text" class='date' name='A8date'></date></li>
+
+                                    </ol> 
+                      </div> <!-- online -->
+
+                      <input id="action" name="action" type="hidden" value="email" />
+                  </div><!-- tab-content emd-->
+                </div><!-- col-md-12 end-->
+            </div><!-- row end -->
+        </div><!-- containter end-->       
+        <!--endprint--> 
+    </form>  
+    <footer id="footer">
+      <div class="container">  
+        <p>ver.20150719 <a href="#nav" class="pull-right">回頂端</a></p>
+      </div>
+    </footer>
+
+<div class="modal fade" id="printModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">請選擇列印範圍</h4>
+      </div>
+      <div class="modal-body">
+        <label class="checkbox-inline"><input type="checkbox" id="showbasic"> 基本檢測</label>
+        <label class="checkbox-inline"><input type="checkbox" id="showadmin"> 後台基本檢測</label>
+        <label class="checkbox-inline"><input type="checkbox" id="showshop"> 購物網站</label>
+        <label class="checkbox-inline"><input type="checkbox" id="showchina"> 中國網站</label>
+        <label class="checkbox-inline"><input type="checkbox" id="showonline"> 網站上線後檢測</label>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelprint" type="button" class="btn btn-default pull-left" data-dismiss="modal">返回</button>
+        <button id="print" type="button" class="btn btn-primary pull-right"><span class="glyphicon glyphicon-print"></span> 列印</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+<script>
+function addZero(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
+}
+$('.msg').delay(2000).fadeOut("slow");
+
+$(function () {
+
+  $('#save').click(function(){
+    $('#action').val($(this).data('tag'));
+    $('#form1').submit();
+  })
+  $('[data-toggle="tooltip"]').tooltip();
+
+  $( "label" ).each(function() {
+   if ($(this).children('input[type=checkbox]').prop('checked')) $(this).addClass('checked');
+  });
+ 
+  $('label').click(function(){
+    var currentdate = new Date(); 
+    var datetime = currentdate.getFullYear() + "/" + (currentdate.getMonth()+1) + "/" + currentdate.getDate()  + " "
+                + addZero(currentdate.getHours()) + ":"  + addZero(currentdate.getMinutes()) ;    
+    if ($(this).children('input[type=checkbox]').prop('checked')) {
+      $(this).addClass('checked');
+      $(this).parent().find('.date').val(datetime);
+    }
+    else {
+      $(this).removeClass('checked');
+      $(this).parent().find('.date').val('');
+    }
+  });
+
+  
+  
+  $('#showprintmd').click(function () {      
+      $('#printModal').modal('show');      
+      $('#basic, #admin, #shop, #china, #online').removeClass('active');
+      $('#action').val($(this).data('tag'));
+      //$('#form1').submit();
+  });
+  $('#showbasic').click(function () {      
+      $('#basic').toggleClass('show');      
+  });
+  $('#showadmin').click(function () {      
+      $('#admin').toggleClass('show');      
+  });
+  $('#showshop').click(function () {      
+      $('#shop').toggleClass('show');      
+  });
+  $('#showchina').click(function () {      
+      $('#china').toggleClass('show');      
+  });
+  $('#showonline').click(function () {      
+      $('#online').toggleClass('show');      
+  });
+  $('#cancelprint').click(function () {      
+      $('#basic').addClass('active');
+      $('#admin, #shop, #china, #online').removeClass('active');
+      $('#functab li').removeClass('active');
+      $('#functab li').eq(0).addClass('active');
+
+  });
+
+  $('#print').click(function () {      
+    $('#main').prepend("<a class=\'goback btn btn-default\' onclick=\"location.href=location.href;\">返回</a>");
+      window.document.body.innerHTML = $('#main').html();
+      window.print();
+  });
+
+})    
+
+</script>
